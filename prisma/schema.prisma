@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model user {
+  id_user        Int   @id @default(autoincrement())
+  name      String?
+  password  String
+  rol Role @default(USER)
+}
+
+model cancha {
+  id_cancha  Int      @id @default(autoincrement())
+  name       String
+  img        String?  // Imagen opcional
+  partidos   partido[]  // Relación inversa
+}
+
+model equipo {
+  id_equipo   Int      @id @default(autoincrement())
+  name        String?
+  ciudad      String
+  diciplina   String
+  img         String?  // Imagen opcional
+   partidos_local     partido[] @relation("equipo_local")
+  partidos_visitante partido[] @relation("equipo_visitante")
+
+  // Relaciones
+  jugador jugador[]
+  clasificacion clasificacion[]
+}
+
+model fase_torneo {
+  id_fase_torneo Int    @id @default(autoincrement())
+  nombre         String
+  partidos   partido[] 
+}
+
+model clasificacion {
+  id_clasificacion       Int   @id @default(autoincrement())
+  id_equipo Int //aqui me falta la llave foranea para equipo
+  puntos_totales Int
+  partidos_jugados Int
+  partidos_ganados Int
+  partidos_perdidos Int
+  diferencia_puntos Int
+
+  // Relaciones
+  equipo equipo @relation(fields: [id_equipo], references: [id_equipo], onDelete: Cascade)
+}
+
+model jugador {
+  id_jugador       Int   @id @default(autoincrement())
+  name      String
+  numero Int
+  posicion String
+  id_equipo Int //aqui me falta la llave foranea para equipo
+
+  // Relaciones
+  equipo equipo @relation(fields: [id_equipo], references: [id_equipo], onDelete: Cascade)
+
+  // Relaciones inversas
+  estadistica_basquet estadistica_basquet[]
+  estadistica_futbol  estadistica_futbol[]
+  estadistica_voley   estadistica_voley[]
+}
+model partido {
+  id_partido          Int      @id @default(autoincrement())
+  fecha               DateTime
+  equipo_local_id     Int
+  equipo_visitante_id Int
+  cancha_id           Int
+  fase_torneo_id      Int
+  estado              String
+  puntos_local        Int
+  puntos_visitante    Int
+
+  // Relaciones 
+  cancha          cancha           @relation(fields: [cancha_id], references: [id_cancha], onDelete: Cascade)
+  equipo_local    equipo           @relation("equipo_local", fields: [equipo_local_id], references: [id_equipo], onDelete: Cascade)
+  equipo_visitante equipo          @relation("equipo_visitante", fields: [equipo_visitante_id], references: [id_equipo], onDelete: Cascade)
+  fase_torneo     fase_torneo      @relation(fields: [fase_torneo_id], references: [id_fase_torneo], onDelete: Cascade)
+
+  // Relaciones inversas
+  estadistica_basquet estadistica_basquet[]
+  estadistica_futbol  estadistica_futbol[]
+  estadistica_voley   estadistica_voley[]
+}
+
+model estadistica_basquet {
+  id_estadistica_basquet Int   @id @default(autoincrement())
+  id_partido             Int   // Cambié de String a Int para coincidir con `partido`
+  id_jugador             Int   // Suponiendo que los jugadores tienen ID de tipo Int
+  puntos                 Int
+  asistencias            Int
+  rebotes                Int
+  robos                  Int
+  tapones                Int
+  perdidas               Int
+  faltas                 Int?  // Opcional
+  minutos_jugados        Int?  // Opcional
+
+  partido         partido     @relation(fields: [id_partido], references: [id_partido], onDelete: Cascade)
+  jugador         jugador     @relation(fields: [id_jugador], references: [id_jugador], onDelete: Cascade)
+}
+
+model estadistica_futbol {
+  id_estadistica_futbol Int   @id @default(autoincrement())
+  id_partido            Int   // Cambié de String a Int
+  id_jugador            Int   // Suponiendo que los jugadores tienen ID de tipo Int
+  goles                 Int
+  asistencias           Int
+  tarjetas_amarillas    Int
+  tarjetas_rojas        Int
+  faltas                Int?   // Opcional
+  atajadas              Int?   // Opcional
+  pases_completos       Int?   // Opcional
+  recuperaciones        Int?   // Opcional
+  minutos_jugados       Int?   // Opcional
+
+  partido         partido     @relation(fields: [id_partido], references: [id_partido], onDelete: Cascade)
+  jugador         jugador     @relation(fields: [id_jugador], references: [id_jugador], onDelete: Cascade)
+}
+
+model estadistica_voley {
+  id_estadistica_voley  Int   @id @default(autoincrement())
+  id_partido            Int   // Cambié de String a Int
+  id_jugador            Int   // Suponiendo que los jugadores tienen ID de tipo Int
+  saques                Int
+  bloqueos              Int
+  puntos                Int
+  recepciones           Int
+  defensas              Int
+  faltas                Int?   // Opcional
+  errores               Int?   // Opcional
+
+  partido         partido     @relation(fields: [id_partido], references: [id_partido], onDelete: Cascade)
+  jugador         jugador     @relation(fields: [id_jugador], references: [id_jugador], onDelete: Cascade)
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+
+
+
+
+
+
+
