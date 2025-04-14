@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { CreateEquipoDto } from './dto/create-equipo.dto';
 import { UpdateEquipoDto } from './dto/update-equipo.dto';
 import { PrismaClient } from '@prisma/client';
@@ -8,27 +8,46 @@ export class EquipoService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger('ProductService')
   onModuleInit() {
     this.$connect();
-    this.logger.log("Base de datos conectada");
+    this.logger.log("Base de datos conectada Equipo");
   }
   create(createEquipoDto: CreateEquipoDto) {
-    return this.equipo.create({
+    return this.equipos.create({
       data: createEquipoDto 
     });
   } 
 
-  findAll() {
-      return this.equipo.findMany();
+  async findAll() {
+      return this.equipos.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} equipo`;
+  async findOne(id: number) {
+    const equipo = await this.equipos.findFirst({where:{id_equipo: id}});
+    if(!equipo){
+      throw new NotFoundException({
+        message: `Equipo con id ${id} no se encontró`,
+        status: HttpStatus.BAD_REQUEST
+
+      }); //Template string
+    }
+    return equipo;
   }
 
-  update(id: number, updateEquipoDto: UpdateEquipoDto) {
-    return `This action updates a #${id} equipo`;
+  async update(id: number, updateEquipoDto: UpdateEquipoDto) {
+    const {id_equipo:__,...data} = updateEquipoDto      //desestructurar para que data tenga todos los elementos menos id
+    await this.findOne(id);
+    return this.equipos.update({
+      where:{id_equipo: id},
+      data: data,
+      
+
+    })
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} equipo`;
+  async remove(id: number) {
+    await this.findOne(id);
+
+    return this.equipos.delete({
+      where: {id_equipo: id}
+    });
   }
 }

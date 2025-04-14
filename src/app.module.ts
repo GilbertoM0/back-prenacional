@@ -7,12 +7,14 @@ import { FaseTorneoModule } from './fase_torneo/fase_torneo.module';
 import { ClasificacionModule } from './clasificacion/clasificacion.module';
 import { JugadorModule } from './jugador/jugador.module';
 import { PartidoModule } from './partido/partido.module';
-import { EstadisticaBasquetModule } from './estadistica_basquet/estadistica_basquet.module';
-import { EstadisticaFutbolModule } from './estadistica_futbol/estadistica_futbol.module';
-import { EstadisticaVoleyModule } from './estadistica_voley/estadistica_voley.module';
+import { DisciplinasModule } from './disciplinas/disciplinas.module';
+import { GruposModule } from './grupos/grupos.module';
+import { PuntosdeinteresModule } from './puntosdeinteres/puntosdeinteres.module';
+import { RoldejuegosModule } from './roldejuegos/roldejuegos.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
-  imports: [ EquipoModule, UserModule, CanchaModule, FaseTorneoModule, ClasificacionModule, JugadorModule, PartidoModule, EstadisticaBasquetModule, EstadisticaFutbolModule, EstadisticaVoleyModule],
+  imports: [ EquipoModule, UserModule, CanchaModule, FaseTorneoModule, ClasificacionModule, JugadorModule, PartidoModule, DisciplinasModule, GruposModule, PuntosdeinteresModule, RoldejuegosModule, RolesModule],
   controllers: [],
   providers: [],
 })

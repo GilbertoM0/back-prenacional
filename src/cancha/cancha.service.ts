@@ -1,26 +1,53 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { CreateCanchaDto } from './dto/create-cancha.dto';
 import { UpdateCanchaDto } from './dto/update-cancha.dto';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class CanchaService {
+export class CanchaService extends PrismaClient implements OnModuleInit {
+  private readonly logger = new Logger('ProductService')
+  onModuleInit() {
+    this.$connect();
+    this.logger.log("Base de datos conectada Cancha");
+  }
   create(createCanchaDto: CreateCanchaDto) {
-    return 'This action adds a new cancha';
+    return this.canchas.create({
+      data: createCanchaDto 
+    });
   }
 
-  findAll() {
-    return `This action returns all cancha`;
+  async findAll() {
+    return this.canchas.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cancha`;
+  async findOne(id: number) {
+    const cancha = await this.canchas.findFirst({where:{id_cancha: id}});
+        if(!cancha){
+          throw new NotFoundException({
+            message: `Cancha con id ${id} no se encontró`,
+            status: HttpStatus.BAD_REQUEST
+    
+          }); //Template string
+        }
+        return cancha;
   }
 
-  update(id: number, updateCanchaDto: UpdateCanchaDto) {
-    return `This action updates a #${id} cancha`;
+  async update(id: number, updateCanchaDto: UpdateCanchaDto) {
+    const {id_cancha:__,...data} = updateCanchaDto      //desestructurar para que data tenga todos los elementos menos id
+    await this.findOne(id);
+    return this.canchas.update({
+      where:{id_cancha: id},
+      data: data,
+      
+
+    })
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cancha`;
+  async remove(id: number) {
+    await this.findOne(id);
+
+    return this.canchas.delete({
+      where: {id_cancha: id}
+    });
   }
 }

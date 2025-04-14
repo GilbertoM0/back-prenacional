@@ -1,26 +1,53 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { CreateJugadorDto } from './dto/create-jugador.dto';
 import { UpdateJugadorDto } from './dto/update-jugador.dto';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class JugadorService {
+export class JugadorService extends PrismaClient implements OnModuleInit {
+  private readonly logger = new Logger('ProductService')
+  onModuleInit() {
+    this.$connect();
+    this.logger.log("Base de datos conectada Jugador");
+  }
   create(createJugadorDto: CreateJugadorDto) {
-    return 'This action adds a new jugador';
+    return this.jugadores.create({
+      data: createJugadorDto 
+    });
   }
 
   findAll() {
-    return `This action returns all jugador`;
+    return this.jugadores.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} jugador`;
+  async findOne(id: number) {
+     const jugador = await this.jugadores.findFirst({where:{id_jugador: id}});
+        if(!jugador){
+          throw new NotFoundException({
+            message: `Jugador con id ${id} no se encontró`,
+            status: HttpStatus.BAD_REQUEST
+    
+          }); //Template string
+        }
+        return jugador;
   }
 
-  update(id: number, updateJugadorDto: UpdateJugadorDto) {
-    return `This action updates a #${id} jugador`;
+  async  update(id: number, updateJugadorDto: UpdateJugadorDto) {
+    const {id_jugador:__,...data} = updateJugadorDto      //desestructurar para que data tenga todos los elementos menos id
+    await this.findOne(id);
+    return this.jugadores.update({
+      where:{id_jugador: id},
+      data: data,
+      
+
+    })
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} jugador`;
+  async remove(id: number) {
+    await this.findOne(id);
+
+    return this.jugadores.delete({
+      where: {id_jugador: id}
+    });
   }
 }

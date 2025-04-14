@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { FaseTorneoService } from './fase_torneo.service';
 import { CreateFaseTorneoDto } from './dto/create-fase_torneo.dto';
 import { UpdateFaseTorneoDto } from './dto/update-fase_torneo.dto';
+import { PaginationDto } from 'src/common';
 
 @Controller('fase-torneo')
 export class FaseTorneoController {

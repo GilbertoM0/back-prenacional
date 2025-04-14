@@ -14,145 +14,169 @@ datasource db {
 }
 
 
-model user {
+model usuarios {
   id_user        Int   @id @default(autoincrement())
-  name      String?
-  password  String
-  rol Role @default(USER)
-}
-
-model cancha {
-  id_cancha  Int      @id @default(autoincrement())
-  name       String
-  img        String?  // Imagen opcional
-  partidos   partido[]  // Relación inversa
-}
-
-model equipo {
-  id_equipo   Int      @id @default(autoincrement())
-  name        String?
-  ciudad      String
-  diciplina   String
-  img         String?  // Imagen opcional
-   partidos_local     partido[] @relation("equipo_local")
-  partidos_visitante partido[] @relation("equipo_visitante")
+  nombre        String
+  rollid        Int
+  disciplinaid  Int
+  grupoid       Int
 
   // Relaciones
-  jugador jugador[]
-  clasificacion clasificacion[]
+  diciplinas    diciplinas @relation(fields: [disciplinaid], references: [id_diciplinas], onDelete: Cascade)
+  grupos        grupos @relation(fields: [grupoid], references: [id_grupo], onDelete: Cascade)
+  roles         roles @relation(fields: [rollid], references: [id_rol], onDelete: Cascade)
 }
 
-model fase_torneo {
-  id_fase_torneo Int    @id @default(autoincrement())
-  nombre         String
-  partidos   partido[] 
+model canchas {
+  id_cancha     Int      @id @default(autoincrement())
+  nombre        String
+  ubicacion     String  
+  imagen        String?  // Imagen opcional
+
+
+  partidos   partidos[]  // Relación inversa
+}
+model equipos {
+  id_equipo           Int             @id @default(autoincrement())
+  nombre              String?
+  ciudad              String
+  diciplinaid         Int
+
+  // Relaciones
+  partidos_local      partidos[]       @relation("equipo_local")
+  partidos_visitante  partidos[]       @relation("equipo_visitante")
+
+  equipo1             rolDeJuegos[]   @relation("equipo1")
+  equipo2             rolDeJuegos[]   @relation("equipo2")
+
+  diciplinas         diciplinas @relation(fields: [diciplinaid], references: [id_diciplinas], onDelete: Cascade)
+
+  jugador             jugadores[]
+  clasificacion       clasificacion[]
+}
+
+model rolDeJuegos {
+  id_RolDeJuegos      Int             @id @default(autoincrement())
+  disciplinaid        Int
+  equipo1id           Int
+  equipo2id           Int
+  fecha               DateTime
+  puntuacionEquipo1   Int
+  puntuacionEquipo2   Int
+  estado              String
+  clasificadoid       Int
+  faseTorneoid        Int
+
+  // Relaciones (corregidas)
+  equipo1             equipos         @relation("equipo1", fields: [equipo1id], references: [id_equipo], onDelete: Cascade)
+  equipo2             equipos         @relation("equipo2", fields: [equipo2id], references: [id_equipo], onDelete: Cascade)
+  faseTorneo     fasesTorneo      @relation(fields: [faseTorneoid], references: [id_fase_torneo], onDelete: Cascade)
+  clasificado     clasificacion      @relation(fields: [clasificadoid], references: [id_clasificacion], onDelete: Cascade)
+  diciplinas         diciplinas @relation(fields: [disciplinaid], references: [id_diciplinas], onDelete: Cascade)
+
+}
+
+
+model fasesTorneo {
+  id_fase_torneo    Int    @id @default(autoincrement())
+  nombre            String
+  descripcion       String
+  fechaInicio       DateTime
+  fechaFin          DateTime
+
+  // Relaciones
+  RolDeJuegos   rolDeJuegos[] // Relación inversa
+  partidos   partidos[] 
 }
 
 model clasificacion {
-  id_clasificacion       Int   @id @default(autoincrement())
-  id_equipo Int //aqui me falta la llave foranea para equipo
-  puntos_totales Int
-  partidos_jugados Int
-  partidos_ganados Int
-  partidos_perdidos Int
-  diferencia_puntos Int
+  id_clasificacion    Int   @id @default(autoincrement())
+  equipoid            Int //aqui me falta la llave foranea para equipo
+  puntosTotales       Int
+  partidosJugados     Int
+  partidosGanados     Int
+  partidosPerdidos    Int
+  puntosAFavor        Int
+  puntosEnContra      Int
+  puntosPorPartido    Int
+  diferenciaPuntos    Int
 
   // Relaciones
-  equipo equipo @relation(fields: [id_equipo], references: [id_equipo], onDelete: Cascade)
+  equipo equipos @relation(fields: [equipoid], references: [id_equipo], onDelete: Cascade)
+  RolDeJuegos   rolDeJuegos[] // Relación inversa
+  
+
+
 }
 
-model jugador {
-  id_jugador       Int   @id @default(autoincrement())
-  name      String
-  numero Int
-  posicion String
-  id_equipo Int //aqui me falta la llave foranea para equipo
+model jugadores {
+  id_jugador  Int   @id @default(autoincrement())
+  nombre      String
+  numero      Int
+  posicion    String
+  equipoid    Int //aqui me falta la llave foranea para equipo
 
   // Relaciones
-  equipo equipo @relation(fields: [id_equipo], references: [id_equipo], onDelete: Cascade)
+  equipo equipos @relation(fields: [equipoid], references: [id_equipo], onDelete: Cascade)
 
-  // Relaciones inversas
-  estadistica_basquet estadistica_basquet[]
-  estadistica_futbol  estadistica_futbol[]
-  estadistica_voley   estadistica_voley[]
 }
-model partido {
-  id_partido          Int      @id @default(autoincrement())
-  fecha               DateTime
-  equipo_local_id     Int
-  equipo_visitante_id Int
-  cancha_id           Int
-  fase_torneo_id      Int
-  estado              String
-  puntos_local        Int
-  puntos_visitante    Int
+model partidos {
+  id_partido         Int      @id @default(autoincrement())
+  fecha              DateTime
+  hora               String
+  equipoLocalid      Int
+  equipoVisitanteid  Int
+  canchaid           Int
+  faseTorneoid       Int
+  estado             String
+  puntosLocal        Int
+  puntosVisitante    Int
 
   // Relaciones 
-  cancha          cancha           @relation(fields: [cancha_id], references: [id_cancha], onDelete: Cascade)
-  equipo_local    equipo           @relation("equipo_local", fields: [equipo_local_id], references: [id_equipo], onDelete: Cascade)
-  equipo_visitante equipo          @relation("equipo_visitante", fields: [equipo_visitante_id], references: [id_equipo], onDelete: Cascade)
-  fase_torneo     fase_torneo      @relation(fields: [fase_torneo_id], references: [id_fase_torneo], onDelete: Cascade)
-
-  // Relaciones inversas
-  estadistica_basquet estadistica_basquet[]
-  estadistica_futbol  estadistica_futbol[]
-  estadistica_voley   estadistica_voley[]
+  canchas          canchas           @relation(fields: [canchaid], references: [id_cancha], onDelete: Cascade)
+  equipo_local    equipos           @relation("equipo_local", fields: [equipoLocalid], references: [id_equipo], onDelete: Cascade)
+  equipo_visitante equipos          @relation("equipo_visitante", fields: [equipoVisitanteid], references: [id_equipo], onDelete: Cascade)
+  fase_torneo     fasesTorneo      @relation(fields: [faseTorneoid], references: [id_fase_torneo], onDelete: Cascade)
 }
 
-model estadistica_basquet {
-  id_estadistica_basquet Int   @id @default(autoincrement())
-  id_partido             Int   // Cambié de String a Int para coincidir con `partido`
-  id_jugador             Int   // Suponiendo que los jugadores tienen ID de tipo Int
-  puntos                 Int
-  asistencias            Int
-  rebotes                Int
-  robos                  Int
-  tapones                Int
-  perdidas               Int
-  faltas                 Int?  // Opcional
-  minutos_jugados        Int?  // Opcional
+ model puntosdeInteres {
+  id_PuntosdeInteres  Int @id @default(autoincrement())
+  nombre              String
+  tipo                String
+  ubicacion           String
+  telefono            String
+  imagen              String
+  horarioAtencion     String
+  calificacion        Float 
+  
+ }
 
-  partido         partido     @relation(fields: [id_partido], references: [id_partido], onDelete: Cascade)
-  jugador         jugador     @relation(fields: [id_jugador], references: [id_jugador], onDelete: Cascade)
-}
+ model diciplinas {
+  id_diciplinas         Int @id @default(autoincrement())
+  nombre              String
+  categoria         String
+  
+  // Relaciones
+  equipos           equipos[]
+  RolDeJuegos      rolDeJuegos[]
+  usuarios        usuarios[]
+  grupos         grupos[]
+ }
 
-model estadistica_futbol {
-  id_estadistica_futbol Int   @id @default(autoincrement())
-  id_partido            Int   // Cambié de String a Int
-  id_jugador            Int   // Suponiendo que los jugadores tienen ID de tipo Int
-  goles                 Int
-  asistencias           Int
-  tarjetas_amarillas    Int
-  tarjetas_rojas        Int
-  faltas                Int?   // Opcional
-  atajadas              Int?   // Opcional
-  pases_completos       Int?   // Opcional
-  recuperaciones        Int?   // Opcional
-  minutos_jugados       Int?   // Opcional
+ model grupos {
+  id_grupo            Int @id @default(autoincrement())
+  nombre              String
+  disciplinaid        Int
+  // Relaciones
+  diciplinas         diciplinas @relation(fields: [disciplinaid], references: [id_diciplinas], onDelete: Cascade)
+  usuarios           usuarios[]
 
-  partido         partido     @relation(fields: [id_partido], references: [id_partido], onDelete: Cascade)
-  jugador         jugador     @relation(fields: [id_jugador], references: [id_jugador], onDelete: Cascade)
-}
+ }
 
-model estadistica_voley {
-  id_estadistica_voley  Int   @id @default(autoincrement())
-  id_partido            Int   // Cambié de String a Int
-  id_jugador            Int   // Suponiendo que los jugadores tienen ID de tipo Int
-  saques                Int
-  bloqueos              Int
-  puntos                Int
-  recepciones           Int
-  defensas              Int
-  faltas                Int?   // Opcional
-  errores               Int?   // Opcional
-
-  partido         partido     @relation(fields: [id_partido], references: [id_partido], onDelete: Cascade)
-  jugador         jugador     @relation(fields: [id_jugador], references: [id_jugador], onDelete: Cascade)
-}
-
-enum Role {
-  ADMIN
-  USER
+model roles{
+  id_rol             Int @id @default(autoincrement())
+  nombre             String
+  usuarios           usuarios[]
 }
 
 

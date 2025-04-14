@@ -1,15 +1,13 @@
-import { IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { IsNumber, IsString } from "class-validator";
 
 export class CreateEquipoDto {
     @IsString()
-    public name: string;
+    public nombre: string;
     @IsString()
     public ciudad: string;
-    @IsString()
-    public diciplina: string;
-    @IsString()
-    public img: string;
-
-
+    @IsNumber()
+    @Type(() => Number)
+    public diciplinaid: number;
 }
    
