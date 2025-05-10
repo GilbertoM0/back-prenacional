@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model tecs {
+  id_tecs        Int    @id @default(autoincrement())
+  nombre         String
+  logo           String
+  ciudad         String
+
+  // Relaciones
+  equipos        equipos[]
+}
+
+model equipos {
+  id_equipo           Int    @id @default(autoincrement())
+  nombre              String?
+  diciplinaid         Int
+  grupoid             Int
+  tecsid              Int
+
+  // Relaciones
+  equipoLocal         rolDeJuegos[]   @relation("equipoLocal")
+  equipoVisitante     rolDeJuegos[]   @relation("equipoVisitante")
+
+  jugador             jugadores[]
+  clasificacion       clasificacion[]
+
+  diciplinas          diciplinas   @relation(fields: [diciplinaid], references: [id_diciplinas], onDelete: Cascade)  
+  grupos              grupos       @relation(fields: [grupoid], references: [id_grupo], onDelete: Cascade)  
+  tecs                tecs         @relation(fields: [tecsid], references: [id_tecs], onDelete: Cascade)
+}
+
+model diciplinas {
+  id_diciplinas     Int    @id @default(autoincrement())
+  nombre            String
+  categoria         String
+  
+  // Relaciones
+  equipos           equipos[]
+  RolDeJuegos       rolDeJuegos[]
+  grupos            grupos[]
+}
+
+model clasificacion {
+  id_clasificacion      Int   @id @default(autoincrement())
+  equipoid              Int
+  puntosTotales         Int
+  partidosJugados       Int
+  partidosGanados       Int
+  partidosPerdidos      Int
+  puntosAFavor          Int
+  puntosEnContra        Int
+  puntosPorPartido      Int
+  diferenciaPuntos      Int
+
+  // Relaciones
+  equipo                equipos @relation(fields: [equipoid], references: [id_equipo], onDelete: Cascade)
+}
+
+model jugadores {
+  id_jugador      Int    @id @default(autoincrement())
+  nombre          String
+  numero          Int
+  posicion        String
+  foto            String
+  equipoid        Int
+
+  // Relaciones
+  equipo          equipos @relation(fields: [equipoid], references: [id_equipo], onDelete: Cascade)
+}
+
+model grupos {
+  id_grupo            Int    @id @default(autoincrement())
+  nombre              String
+  disciplinaid        Int
+  
+  // Relaciones
+  diciplinas         diciplinas @relation(fields: [disciplinaid], references: [id_diciplinas], onDelete: Cascade)
+  equipos            equipos[]
+}
+
+model canchas {
+  id_cancha         Int    @id @default(autoincrement())
+  nombre            String
+  ubicacion         String  
+  imagen            String
+  mapa              String
+  telefono          String?
+  tipo              String
+
+  // Relaciones
+  partidos          partidos[]
+  puntosdeInteres   puntosdeInteres[]
+}
+
+model puntosdeInteres {
+  id_PuntosdeInteres    Int    @id @default(autoincrement())
+  nombre                String
+  tipo                  String
+  ubicacion             String
+  telefono              String
+  imagen                String
+  horarioAtencion       String
+  mapa                  String
+  canchaid              Int
+
+  // Relaciones
+  canchas               canchas @relation(fields: [canchaid], references: [id_cancha], onDelete: Cascade)
+}
+
+model usuarios {
+  id_user        Int      @id @default(autoincrement())
+  nombre         String   @unique
+  contrasena     String
+}
+
+model rolDeJuegos {
+  id_RolDeJuegos      Int   @id @default(autoincrement())
+  disciplinaid        Int
+  equipoLocalid       Int
+  equipoVisitid       Int
+  fecha               String
+  hora                String
+
+  // Relaciones
+  diciplinas          diciplinas @relation(fields: [disciplinaid], references: [id_diciplinas], onDelete: Cascade)
+  equipoLocal         equipos @relation("equipoLocal", fields: [equipoLocalid], references: [id_equipo], onDelete: Cascade)
+  equipoVisitante     equipos @relation("equipoVisitante", fields: [equipoVisitid], references: [id_equipo], onDelete: Cascade)
+  partidos            partidos[]
+}
+
+model partidos {
+  id_partido          Int   @id @default(autoincrement())
+  rolid               Int
+  canchaid            Int  
+  puntosLocal         Int
+  puntosVisitante     Int
+  fase                String
+  estado              String
+  papeleta            String
+
+  // Relaciones 
+  rolDeJuegos         rolDeJuegos @relation(fields: [rolid], references: [id_RolDeJuegos], onDelete: Cascade)
+  canchas             canchas @relation(fields: [canchaid], references: [id_cancha], onDelete: Cascade)
+}
