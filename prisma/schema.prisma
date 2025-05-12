@@ -155,3 +155,11 @@ model partidos {
   rolDeJuegos         rolDeJuegos @relation(fields: [rolid], references: [id_RolDeJuegos], onDelete: Cascade)
   canchas             canchas @relation(fields: [canchaid], references: [id_cancha], onDelete: Cascade)
 }
+
+model noticias {
+  id_noticia         Int    @id @default(autoincrement())
+  fecha      DateTime 
+  imagen             String
+  contenido          String
+  activo             Boolean @default(true)
+}
