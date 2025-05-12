@@ -1,13 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import * as cors from 'cors';
 import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   dotenv.config();
-  app.use(cors()); 
+  app.enableCors();
   app.setGlobalPrefix('api');
   app.useGlobalPipes(  
     new ValidationPipe({ 
