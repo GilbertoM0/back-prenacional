@@ -1,53 +1,75 @@
-import { HttpStatus, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service'; // Asegúrate de importar PrismaService
 
 @Injectable()
-export class UserService extends PrismaClient implements OnModuleInit {
-  private readonly logger = new Logger('ProductService')
-  onModuleInit() {
-    this.$connect();
-    this.logger.log("Base de datos conectada User");
-  }
-  create(createUserDto: CreateUserDto) {
-    return this.usuarios.create({
-      data: createUserDto 
-    });
+export class UserService {
+  private readonly logger = new Logger('UserService');
+
+  constructor(private readonly prisma: PrismaService) {} // Inyecta PrismaService
+
+  async create(createUserDto: CreateUserDto) {
+    try {
+      return await this.prisma.usuarios.create({
+        data: createUserDto,
+      });
+    } catch (error) {
+      this.logger.error('Error al crear usuario:', error);
+      throw error;
+    }
   }
 
   async findAll() {
-    return this.usuarios.findMany();
-}
+    try {
+      return await this.prisma.usuarios.findMany();
+    } catch (error) {
+      this.logger.error('Error al obtener todos los usuarios:', error);
+      throw error;
+    }
+  }
 
-   async findOne(id: number) {
-     const user = await this.usuarios.findFirst({where:{id_user: id}});
-     if(!user){
-       throw new NotFoundException({
-         message: `Equipo con id ${id} no se encontró`,
-         status: HttpStatus.BAD_REQUEST
- 
-       }); //Template string
-     }
-     return user;
-   }
+  async findOne(id: number) {
+    try {
+      const user = await this.prisma.usuarios.findFirst({
+        where: { id_user: id },
+      });
+      if (!user) {
+        throw new NotFoundException({
+          message: `Usuario con id ${id} no se encontró`,
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+      return user;
+    } catch (error) {
+      this.logger.error(`Error al encontrar el usuario con id ${id}:`, error);
+      throw error;
+    }
+  }
 
-   async update(id: number, updateUserDto: UpdateUserDto) {
-    const {id_user:__,...data} = updateUserDto      //desestructurar para que data tenga todos los elementos menos id
-    await this.findOne(id);
-    return this.usuarios.update({
-      where:{id_user: id},
-      data: data,
-      
-
-    })
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    try {
+      const { id_user: __, ...data } = updateUserDto; // Excluir id del DTO
+      await this.findOne(id); // Verifica si el usuario existe antes de actualizarlo
+      return await this.prisma.usuarios.update({
+        where: { id_user: id },
+        data: data,
+      });
+    } catch (error) {
+      this.logger.error(`Error al actualizar el usuario con id ${id}:`, error);
+      throw error;
+    }
   }
 
   async remove(id: number) {
-    await this.findOne(id);
-
-    return this.usuarios.delete({
-      where: {id_user: id}
-    });
+    try {
+      await this.findOne(id); // Verifica si el usuario existe antes de eliminarlo
+      return await this.prisma.usuarios.delete({
+        where: { id_user: id },
+      });
+    } catch (error) {
+      this.logger.error(`Error al eliminar el usuario con id ${id}:`, error);
+      throw error;
+    }
   }
 }

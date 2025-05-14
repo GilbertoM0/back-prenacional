@@ -1,52 +1,76 @@
-import { HttpStatus, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+// src/disciplinas/disciplinas.service.ts
+import { HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateDisciplinaDto } from './dto/create-disciplina.dto';
 import { UpdateDisciplinaDto } from './dto/update-disciplina.dto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service'; // Importa PrismaService
 
 @Injectable()
-export class DisciplinasService extends PrismaClient implements OnModuleInit {
-  private readonly logger = new Logger('ProductService')
-  onModuleInit() {
-    this.$connect();
-    this.logger.log("Base de datos conectada Jugador");
-  }
-  create(createDisciplinaDto: CreateDisciplinaDto) {
-    return this.diciplinas.create({
-      data: createDisciplinaDto
-    });
+export class DisciplinasService {
+  private readonly logger = new Logger('DisciplinasService');
+
+  constructor(private readonly prisma: PrismaService) {} // Inyecta PrismaService
+
+  async create(createDisciplinaDto: CreateDisciplinaDto) {
+    try {
+      return await this.prisma.diciplinas.create({
+        data: createDisciplinaDto,
+      });
+    } catch (error) {
+      this.logger.error('Error al crear la disciplina:', error);
+      throw error; // Lanza el error para que se maneje en el nivel superior
+    }
   }
 
-  findAll() {
-    return this.diciplinas.findMany();
+  async findAll() {
+    try {
+      return await this.prisma.diciplinas.findMany(); // Usa PrismaService para obtener todas las disciplinas
+    } catch (error) {
+      this.logger.error('Error al obtener todas las disciplinas:', error);
+      throw error;
+    }
   }
+
   async findOne(id: number) {
-       const diciplina = await this.diciplinas.findFirst({where:{id_diciplinas: id}});
-          if(!diciplina){
-            throw new NotFoundException({
-              message: `Diciplina con id ${id} no se encontró`,
-              status: HttpStatus.BAD_REQUEST
-      
-            }); //Template string
-          }
-          return diciplina;
-    }
-  
-    async  update(id: number, updateDisciplinaDto: UpdateDisciplinaDto) {
-      const {id_diciplinas:__,...data} = updateDisciplinaDto      //desestructurar para que data tenga todos los elementos menos id
-      await this.findOne(id);
-      return this.diciplinas.update({
-        where:{id_diciplinas: id},
-        data: data,
-        
-  
-      })
-    }
-  
-    async remove(id: number) {
-      await this.findOne(id);
-  
-      return this.diciplinas.delete({
-        where: {id_diciplinas: id}
+    try {
+      const disciplina = await this.prisma.diciplinas.findFirst({
+        where: { id_diciplinas: id },
       });
+      if (!disciplina) {
+        throw new NotFoundException({
+          message: `Disciplina con id ${id} no se encontró`,
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+      return disciplina;
+    } catch (error) {
+      this.logger.error(`Error al encontrar la disciplina con id ${id}:`, error);
+      throw error;
     }
+  }
+
+  async update(id: number, updateDisciplinaDto: UpdateDisciplinaDto) {
+    try {
+      const { id_diciplinas: __, ...data } = updateDisciplinaDto; // Desestructuración para excluir el id
+      await this.findOne(id); // Verifica si la disciplina existe antes de actualizarla
+      return await this.prisma.diciplinas.update({
+        where: { id_diciplinas: id },
+        data: data,
+      });
+    } catch (error) {
+      this.logger.error(`Error al actualizar la disciplina con id ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      await this.findOne(id); // Verifica si la disciplina existe antes de eliminarla
+      return await this.prisma.diciplinas.delete({
+        where: { id_diciplinas: id },
+      });
+    } catch (error) {
+      this.logger.error(`Error al eliminar la disciplina con id ${id}:`, error);
+      throw error;
+    }
+  }
 }

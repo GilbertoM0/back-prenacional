@@ -1,53 +1,76 @@
-import { HttpStatus, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+// src/equipo/equipo.service.ts
+import { HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateEquipoDto } from './dto/create-equipo.dto';
 import { UpdateEquipoDto } from './dto/update-equipo.dto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service'; // Importa PrismaService
 
 @Injectable()
-export class EquipoService extends PrismaClient implements OnModuleInit {
-  private readonly logger = new Logger('ProductService')
-  onModuleInit() {
-    this.$connect();
-    this.logger.log("Base de datos conectada Equipo");
+export class EquipoService {
+  private readonly logger = new Logger('EquipoService');
+
+  constructor(private readonly prisma: PrismaService) {} // Inyecta PrismaService
+
+  async create(createEquipoDto: CreateEquipoDto) {
+    try {
+      return await this.prisma.equipos.create({
+        data: createEquipoDto,
+      });
+    } catch (error) {
+      this.logger.error('Error al crear el equipo:', error);
+      throw error; // Lanza el error para que se maneje en el nivel superior
+    }
   }
-  create(createEquipoDto: CreateEquipoDto) {
-    return this.equipos.create({
-      data: createEquipoDto 
-    });
-  } 
 
   async findAll() {
-      return this.equipos.findMany();
+    try {
+      return await this.prisma.equipos.findMany(); // Usa PrismaService para obtener todos los equipos
+    } catch (error) {
+      this.logger.error('Error al obtener todos los equipos:', error);
+      throw error;
+    }
   }
 
   async findOne(id: number) {
-    const equipo = await this.equipos.findFirst({where:{id_equipo: id}});
-    if(!equipo){
-      throw new NotFoundException({
-        message: `Equipo con id ${id} no se encontró`,
-        status: HttpStatus.BAD_REQUEST
-
-      }); //Template string
+    try {
+      const equipo = await this.prisma.equipos.findFirst({
+        where: { id_equipo: id },
+      });
+      if (!equipo) {
+        throw new NotFoundException({
+          message: `Equipo con id ${id} no se encontró`,
+          status: HttpStatus.BAD_REQUEST,
+        });
+      }
+      return equipo;
+    } catch (error) {
+      this.logger.error(`Error al encontrar el equipo con id ${id}:`, error);
+      throw error;
     }
-    return equipo;
   }
 
   async update(id: number, updateEquipoDto: UpdateEquipoDto) {
-    const {id_equipo:__,...data} = updateEquipoDto      //desestructurar para que data tenga todos los elementos menos id
-    await this.findOne(id);
-    return this.equipos.update({
-      where:{id_equipo: id},
-      data: data,
-      
-
-    })
+    try {
+      const { id_equipo: __, ...data } = updateEquipoDto; // Desestructuración para excluir el id
+      await this.findOne(id); // Verifica si el equipo existe antes de actualizarlo
+      return await this.prisma.equipos.update({
+        where: { id_equipo: id },
+        data: data,
+      });
+    } catch (error) {
+      this.logger.error(`Error al actualizar el equipo con id ${id}:`, error);
+      throw error;
+    }
   }
 
   async remove(id: number) {
-    await this.findOne(id);
-
-    return this.equipos.delete({
-      where: {id_equipo: id}
-    });
+    try {
+      await this.findOne(id); // Verifica si el equipo existe antes de eliminarlo
+      return await this.prisma.equipos.delete({
+        where: { id_equipo: id },
+      });
+    } catch (error) {
+      this.logger.error(`Error al eliminar el equipo con id ${id}:`, error);
+      throw error;
+    }
   }
 }
